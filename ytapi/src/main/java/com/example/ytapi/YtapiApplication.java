@@ -1,29 +1,39 @@
 package com.example.ytapi;
 
+import java.util.concurrent.Executor;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.web.client.RestTemplate;
 
-
-/*
-Task
-- Impemment get api that fetch vudeos fro youtube
-
-- Server should call the YouTube API continuously in background (async) with some interval (say 10 seconds) for fetching the latest videos for a predefined search query and should store the data of videos (specifically these fields - Video title, description, publishing datetime, thumbnails URLs and any other fields you require) in a database with proper indexes.
-- A GET API which returns the stored video data in a paginated response sorted in descending order of published datetime.
-- A basic search API to search the stored videos using their title and description.
-- Dockerize the project.
-- It should be scalable and optimised.
-
-
- */
-
-
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class })
+@EnableAsync
+@EnableScheduling
+@SpringBootApplication
 public class YtapiApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(YtapiApplication.class, args);
+	}
+
+	@Bean
+	public TaskExecutor getAsynExecutor() {
+		ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+		threadPoolTaskExecutor.setMaxPoolSize(1000);
+		threadPoolTaskExecutor.setCorePoolSize(30);
+		threadPoolTaskExecutor.setWaitForTasksToCompleteOnShutdown(true);
+		threadPoolTaskExecutor.setThreadNamePrefix("Async Thread - ");
+		return threadPoolTaskExecutor;
+	}
+
+
+	@Bean
+	public RestTemplate restTemplate(){
+		return new RestTemplate();
 	}
 
 }
